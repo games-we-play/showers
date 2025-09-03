@@ -6,21 +6,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>在陣雨之間</title>
   <style type="text/css">
-    body {
+    html {
       font: 32px "Hiragino Mincho Pro", "新宋体", serif;
       overflow: hidden;
+      /* cursor: none; */
     }
 
     article {
       position: absolute;
-      top: -62rem;
-      right: calc(25rem + 25vw);
-      height: 240rem;
+      top: -31rem;
+      right: calc(10rem + 40vw);
+      height: 120rem;
       writing-mode: vertical-rl;
-      letter-spacing: 3rem;
-      line-height: 3rem;
+      letter-spacing: 1.5rem;
+      line-height: 1.5rem;
 
-      mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 27rem, black 27rem, black 108rem, rgba(0, 0, 0, 0.1) 108rem);
+      mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 15rem, black 15rem, black 54rem, rgba(0, 0, 0, 0.1) 54rem);
       mask-repeat: no-repeat;
       mask-size: cover;
       transform: rotateX(50deg) rotateZ(25deg);
@@ -29,6 +30,7 @@
 </head>
 
 <body>
+  <canvas id="rain"></canvas>
   <article id="poem">
     <p class="slice" id="mapTarget">
       行星上的曠野我正孤獨通過自己行星上的曠野我正孤獨通過自己行星
@@ -56,11 +58,99 @@
     </p>
   </article>
   <script>
+    const canvas = document.getElementById("rain");
+    const ctx = canvas.getContext("2d");
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resize);
+    resize();
+
+    class Raindrop {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * -canvas.height;
+        this.length = 10 + Math.random() * 20;
+        this.speed = this.length * 0.4;
+        this.alpha = Math.random() * 0.6;
+        this.threshold = Math.random() * canvas.height;
+      }
+      update() {
+        this.y += this.speed;
+        if (this.y > this.threshold) {
+          ripples.push(new Ripple(this.x, this.y, this.alpha / 2));
+          this.reset();
+        }
+      }
+      draw(ctx) {
+        this.update();
+        ctx.strokeStyle = `rgba(0, 0, 0, ${this.alpha})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y);
+        ctx.lineTo(this.x, this.y + this.length);
+        ctx.stroke();
+      }
+    }
+
+    class Ripple {
+      constructor(x, y, alpha) {
+        this.x = x;
+        this.y = y;
+        this.alpha = alpha;
+        this.radius = 0;
+      }
+      update() {
+        this.radius += 1;
+        this.alpha -= 0.005;
+      }
+      draw(ctx) {
+        if (this.alpha <= 0) return;
+        this.update();
+        ctx.beginPath();
+        ctx.ellipse(
+          this.x,
+          this.y,
+          this.radius,
+          this.radius * 0.642,
+          Math.PI / 210,
+          0, 2 * Math.PI,
+        );
+        ctx.strokeStyle = `rgba(0, 0, 0, ${this.alpha})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    }
+
+    let drops = Array.from({ length: canvas.width / 10 }, () => new Raindrop());
+    let ripples = [];
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drops.forEach(drop => {
+        drop.draw(ctx);
+      });
+
+      ripples = ripples.filter(r => {
+        r.draw(ctx);
+        return r.alpha > 0;
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+
     let process = 0;
     let y = 0;
     let poem = "行星上的曠野我正孤獨通過自己";
     const poemLength = poem.length;
-    poem = poem.repeat(4);
+    poem = poem.repeat(5);
 
     const mapTarget = document.getElementById("mapTarget");
     const slices = [
@@ -76,8 +166,23 @@
       [14, 26],
     ];
 
+    // const cursor = document.createElement("div");
+    // cursor.textContent = "☂";
+    // cursor.style.position = "fixed";
+    // cursor.style.fontSize = "2rem";
+    // cursor.style.pointerEvents = "none";
+    // cursor.style.transform = "translate(-50%, -50%)";
+    // document.body.appendChild(cursor);
+    // document.addEventListener("mousemove", e => {
+    //   cursor.style.left = e.clientX;
+    //   cursor.style.top = e.clientY;
+    // });
+
     function walk(deltaY) {
-      process = (process + deltaY * 0.01) % poemLength + poemLength;
+      if (deltaY < 0) {
+        return
+      }
+      process = (process + poemLength - deltaY * 0.01) % poemLength;
       document.querySelectorAll(".slice").forEach((p, i) => {
         let start = slices[i][0];
         let end = slices[i][1];
