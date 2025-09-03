@@ -2,8 +2,8 @@
 <html lang="zh-Hant">
 
 <head>
-  <meta name="viewport" content="width=device-width" />
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>在陣雨之間</title>
   <style type="text/css">
     body {
@@ -57,6 +57,7 @@
   </article>
   <script>
     let process = 0;
+    let y = 0;
     let poem = "行星上的曠野我正孤獨通過自己";
     const poemLength = poem.length;
     poem = poem.repeat(4);
@@ -72,10 +73,11 @@
     const mappings = [
       [10, 20],
       [15, 24],
-      [14, 26]
+      [14, 26],
     ];
 
-    function walk() {
+    function walk(deltaY) {
+      process = (process + deltaY * 0.01) % poemLength + poemLength;
       document.querySelectorAll(".slice").forEach((p, i) => {
         let start = slices[i][0];
         let end = slices[i][1];
@@ -95,8 +97,26 @@
     window.addEventListener(
       "wheel",
       (e) => {
-        process = (process + e.deltaY * 0.01) % poemLength + poemLength;
-        walk();
+        walk(e.deltaY);
+        e.preventDefault();
+      },
+      { passive: false }
+    );
+
+    window.addEventListener(
+      "touchstart",
+      (e) => {
+        y = e.touches[0].clientY;
+      },
+      { passive: false }
+    );
+
+    window.addEventListener(
+      "touchmove",
+      (e) => {
+        const deltaY = y - e.touches[0].clientY;
+        y = e.touches[0].clientY;
+        walk(deltaY);
         e.preventDefault();
       },
       { passive: false }
