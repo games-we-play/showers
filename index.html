@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta name="viewport" content="width=device-width" />
+  <meta charset="UTF-8" />
+  <title>在陣雨之間</title>
+  <style type="text/css">
+    body {
+      font: 32px "Hiragino Mincho Pro", "新宋体", serif;
+      overflow: hidden;
+    }
+
+    article {
+      position: absolute;
+      top: -62rem;
+      right: calc(25rem + 25vw);
+      height: 240rem;
+      writing-mode: vertical-rl;
+      letter-spacing: 3rem;
+      line-height: 3rem;
+
+      mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 27rem, black 27rem, black 108rem, rgba(0, 0, 0, 0.1) 108rem);
+      mask-repeat: no-repeat;
+      mask-size: cover;
+      transform: rotateX(50deg) rotateZ(25deg);
+    }
+  </style>
+</head>
+
+<body>
+  <article id="poem">
+    <p class="slice" id="mapTarget">
+      行星上的曠野我正孤獨通過自己行星上的曠野我正孤獨通過自己行星
+    </p>
+    <p class="slice">
+      上的曠野我正孤獨通過自己行星上的曠野我正孤獨通過自己行星上的
+    </p>
+    <p class="slice">
+      曠野我正孤獨通過自己行星上的曠野我正孤獨通過自己行星上的曠野
+    </p>
+    <p class="slice">
+      我正孤獨通過自己行星上的曠野我正孤獨通過自己行星上的曠野我正
+    </p>
+    <p class="slice">
+      孤獨通過自己行星上的曠野我正孤獨通過自己行星上的曠野我正孤獨
+    </p>
+    <p class="mapping">
+      通過自己行星上的曠野
+    </p>
+    <p class="mapping">
+      行星上的曠野正孤獨
+    </p>
+    <p class="mapping">
+      行星上的曠野我正孤獨通過
+    </p>
+  </article>
+  <script>
+    let process = 0;
+    let poem = "行星上的曠野我正孤獨通過自己";
+    const poemLength = poem.length;
+    poem = poem.repeat(4);
+
+    const mapTarget = document.getElementById("mapTarget");
+    const slices = [
+      [0, 30],
+      [2, 32],
+      [4, 34],
+      [6, 36],
+      [8, 38],
+    ];
+    const mappings = [
+      [10, 20],
+      [15, 24],
+      [14, 26]
+    ];
+
+    function walk() {
+      document.querySelectorAll(".slice").forEach((p, i) => {
+        let start = slices[i][0];
+        let end = slices[i][1];
+        const length = end - start;
+        start = (start + process) % length;
+        end = (end + process) % length + length;
+        p.textContent = poem.slice(start, end);
+      });
+
+      document.querySelectorAll(".mapping").forEach((p, i) => {
+        let start = mappings[i][0];
+        let end = mappings[i][1];
+        p.textContent = mapTarget.textContent.slice(start, end);
+      });
+    }
+
+    window.addEventListener(
+      "wheel",
+      (e) => {
+        process = (process + e.deltaY * 0.01) % poemLength + poemLength;
+        walk();
+        e.preventDefault();
+      },
+      { passive: false }
+    );
+  </script>
+</body>
+
+</html>
